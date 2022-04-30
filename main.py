@@ -1,4 +1,3 @@
-
 import requests
 import os
 from pprint import pprint
@@ -20,10 +19,14 @@ url = f'https://newsapi.org/v2/everything?q=nasa\
         &apiKey={key}'
 
 response = requests.get(url)
-                       
-content = response.text
+content = response.json()
 
-pprint(content)
+articles = content['articles']
 
 
+email_body = ''
+for article in articles:
+    email_body = email_body + article['title'] + '\n\t' + article['url'] + '\n\n'
+
+print(email_body)
 
