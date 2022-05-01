@@ -1,40 +1,25 @@
-import requests
+import time
+
+import yagmail
 import os
-from pprint import pprint
+import pandas
+import datetime
+from news import NewsFeed
+
+mail_addr = os.environ.get('automated_mail_addr')
+mail_pass = os.environ.get('automated_mail_pass')
+
+while True:
+    if datetime.datetime.now().hour == 21 and datetime.datetime.now().minute == 15:
+
+        df = pandas.read_excel('people.xlsx')
+
+        for index, row in df.iterrows():
+            news_feed = NewsFeed(interest=row['interest'], from_date='')
+            email = yagmail.SMTP(user=mail_addr, password=mail_pass)
+            email.send(to=row['email'],
+                       subject=f"Your {row['interest']} news for today!",
+                       contents=f"Hi {row['name']}!\n\n See what's on about {row['interest']} today.\n\n {news_feed.get()}\n\nHave a nice day! ")
+    time.sleep(60)
 
 
-class NewsFeed:
-    """Representing multiple news title and links as a single string
-    """
-    base_url = 'https://newsapi.org/v2/everything'
-    api_key = os.environ.get('NEWS_API')
-
-
-    def __init__(self, interest, from_date, to_date):
-        self.interest = interest
-        self.from_date = from_date
-        self.to_date = to_date
-
-    def get(self):
-        url = f'{self.base_url}?' \
-              f'q={self.interest}&' \
-              f'from={self.from_date}&' \
-              f'to={self.to_date}&' \
-              f'sortBy=popularity&' \
-              f'apiKey={self.api_key}'
-
-
-        response = requests.get(url)
-        content = response.json()
-
-        articles = content['articles']
-
-        email_body = ''
-        for article in articles:
-            email_body = email_body + article['title'] + '\n\t' + article['url'] + '\n\n'
-
-        return email_body
-        # print(email_body)
-
-news_feed = NewsFeed(interest='', from_date='2022-05-01', to_date='2022-04-30')
-print(news_feed.get())
